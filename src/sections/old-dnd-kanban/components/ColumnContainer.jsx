@@ -46,34 +46,23 @@ function ColumnContainer({
       <div
         ref={setNodeRef}
         style={style}
-        className="
-      bg-columnBackgroundColor
-      opacity-40
-      border-2
-      border-blue-500
-      w-[350px]
-      h-[500px]
-      max-h-[500px]
-      rounded-md
-      flex
-      flex-col
-      "
-      ></div>
+        className="opacity-40 border-2 border-gray-200 w-[350px] h-[500px] max-h-[500px] rounded-md flex flex-col"
+      />
     );
   }
 
   return (
     <div ref={setNodeRef} style={style} className="bg-[#161616] w-[350px] h-[500px] max-h-[500px] rounded-md flex flex-col">
       {/* Column title */}
-      <div {...attributes} {...listeners} onClick={() => setEditMode(true)} className=" text-md h-[60px] cursor-grab rounded-md rounded-b-none p-3 font-bold flex items-center justify-between">
-        <div className="flex gap-2">
-          <div className="flex justify-center items-center bg-columnBackgroundColor px-2 py-1 text-sm rounded-full">
+      <div {...attributes} {...listeners} onClick={() => setEditMode(true)} className=" text-md h-[60px] cursor-grab rounded-md rounded-b-none p-3 font-semibold flex items-center justify-between">
+        <div className="flex gap-2 text-white">
+          <div className="flex justify-center items-center px-2 py-1 text-sm rounded-full">
             {tasks.length}
           </div>
           {!editMode && column.title}
           {editMode && (
             <input
-              className="bg-black focus:border-blue-500 border rounded outline-none px-2"
+              className="bg-black focus:border-gray-200 border rounded outline-none px-2"
               value={column.title}
               onChange={(e) => updateColumn(column.id, e.target.value)}
               autoFocus
@@ -88,22 +77,21 @@ function ColumnContainer({
           )}
         </div>
         <button
-          onClick={() => {
-            deleteColumn(column.id);
-          }}
+          onClick={() => deleteColumn(column.id)}
           className="hover:bg-columnBackgroundColor rounded px-1 py-2"
         >
-          <MdDeleteOutline size={20} />
+          <MdDeleteOutline size={20} color="white" />
         </button>
       </div>
 
       {/* Column task container */}
-      <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto">
+      <div className="flex flex-grow flex-col gap-4 px-2 pt-2 pb-4 overflow-x-hidden overflow-y-auto">
         <SortableContext items={tasksIds}>
-          {tasks.map((task) => (
+          {tasks.map((task, index) => (
             <TaskCard
               key={task.id}
               task={task}
+              index={index}
               deleteTask={deleteTask}
               updateTask={updateTask}
             />
@@ -112,11 +100,9 @@ function ColumnContainer({
       </div>
       {/* Column footer */}
       <button
-        className="flex gap-2 items-center rounded-md p-4 outline outline-1 outline-[#646464] hover:bg-mainBackgroundColor hover:text-blue-500 active:bg-black"
+        className="flex text-white gap-2 items-center rounded-md p-4 outline outline-1 outline-[#646464] hover:bg-mainBackgroundColor hover:text-blue-500 active:bg-black z-10"
         // style={{ boxShadow: 'rgba(112, 114, 125, 0.5) 0px 1px 4px' }}
-        onClick={() => {
-          createTask(column.id);
-        }}
+        onClick={() => createTask(column.id)}
       >
         + Add task
       </button>

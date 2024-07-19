@@ -1,7 +1,7 @@
 import {CollisionPriority} from '@dnd-kit/abstract';
 import {useSortable} from '@dnd-kit/react/sortable';
 import { IoMdAdd } from 'react-icons/io';
-import { MdAdd, MdDeleteOutline, MdDragIndicator } from 'react-icons/md';
+import { MdDeleteOutline, MdDragIndicator } from 'react-icons/md';
 
 const AddTask = ({ clickAction = () => {} }) => {
   return (

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ColumnContainer from "./components/ColumnContainer";
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
   PointerSensor,
@@ -10,19 +11,21 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import TaskCard from "./components/TaskCard";
+import { RestrictToWindow } from "@dnd-kit/dom/modifiers";
+import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 const defaultCols = [
   {
     id: "todo",
-    title: "Todo",
+    title: "New",
   },
   {
     id: "doing",
-    title: "Work in progress",
+    title: "In progress",
   },
   {
     id: "done",
-    title: "Done",
+    title: "Closed",
   },
 ];
 
@@ -105,6 +108,8 @@ function KanbanBoard() {
 
   const [activeTask, setActiveTask] = useState(null);
 
+  const [callFetch, setCallFetch] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -113,6 +118,13 @@ function KanbanBoard() {
     })
   );
 
+  useEffect(() => {
+    if (callFetch) {
+      console.log('fetch called', tasks);
+      setCallFetch(false)
+    }
+  }, [callFetch]);
+
   return (
     <div className="flex mx-8 items-center">
       <DndContext
@@ -120,6 +132,7 @@ function KanbanBoard() {
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onDragOver={onDragOver}
+        collisionDetection={closestCenter}
       >
         <div className="text-white bg-[#161616] p-8 rounded-2xl">
           <div className="flex gap-8 flex-wrap">
@@ -163,7 +176,7 @@ function KanbanBoard() {
         </div>
 
         {createPortal(
-          <DragOverlay>
+          <DragOverlay modifiers={[restrictToWindowEdges]}>
             {activeColumn && (
               <ColumnContainer
                 column={activeColumn}
@@ -198,38 +211,43 @@ function KanbanBoard() {
       content: `Task ${tasks.length + 1}`,
     };
 
-    setTasks([...tasks, newTask]);
+    setTasks((prev) => [...prev, newTask]);
+    setCallFetch(true);
   }
-
+  
   function deleteTask(id) {
     const newTasks = tasks.filter((task) => task.id !== id);
     setTasks(newTasks);
+    setCallFetch(true);
   }
-
+  
   function updateTask(id, content) {
     const newTasks = tasks.map((task) => {
       if (task.id !== id) return task;
       return { ...task, content };
     });
-
+    
     setTasks(newTasks);
+    setCallFetch(true);
   }
-
+  
   function createNewColumn() {
     const columnToAdd = {
       id: generateId(),
       title: `Column ${columns.length + 1}`,
     };
-
+    
     setColumns([...columns, columnToAdd]);
+    setCallFetch(true);
   }
-
+  
   function deleteColumn(id) {
     const filteredColumns = columns.filter((col) => col.id !== id);
     setColumns(filteredColumns);
 
     const newTasks = tasks.filter((t) => t.columnId !== id);
     setTasks(newTasks);
+    setCallFetch(true);
   }
 
   function updateColumn(id, title) {
@@ -246,8 +264,9 @@ function KanbanBoard() {
       setActiveColumn(event.active.data.current.column);
       return;
     }
-
+    
     if (event.active.data.current?.type === "Task") {
+      console.log(event.active.data.current.task);
       setActiveTask(event.active.data.current.task);
       return;
     }
@@ -255,20 +274,20 @@ function KanbanBoard() {
 
   function onDragEnd(event) {
     setActiveColumn(null);
-    setActiveTask(null);
-
+    
     const { active, over } = event;
     if (!over) return;
-
+    console.log(active.data.current.index);
+    console.log(tasks.findIndex((task) => task.id === active.id ));
+    setActiveTask(null);
+    const isActiveATask = active.data.current?.type === "Task";
+    if (isActiveATask) {
+      setCallFetch(true);
+      return;
+    }
+    
     const activeId = active.id;
     const overId = over.id;
-
-    if (activeId === overId) return;
-
-    const isActiveAColumn = active.data.current?.type === "Column";
-    if (!isActiveAColumn) return;
-
-    console.log("DRAG END");
 
     setColumns((columns) => {
       const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
@@ -277,6 +296,8 @@ function KanbanBoard() {
 
       return arrayMove(columns, activeColumnIndex, overColumnIndex);
     });
+    
+    
   }
 
   function onDragOver(event) {
@@ -293,14 +314,13 @@ function KanbanBoard() {
 
     if (!isActiveATask) return;
 
-    // Im dropping a Task over another Task
+    // dropping a Task over another Task
     if (isActiveATask && isOverATask) {
       setTasks((tasks) => {
         const activeIndex = tasks.findIndex((t) => t.id === activeId);
         const overIndex = tasks.findIndex((t) => t.id === overId);
 
         if (tasks[activeIndex].columnId != tasks[overIndex].columnId) {
-          // Fix introduced after video recording
           tasks[activeIndex].columnId = tasks[overIndex].columnId;
           return arrayMove(tasks, activeIndex, overIndex - 1);
         }
@@ -311,7 +331,7 @@ function KanbanBoard() {
 
     const isOverAColumn = over.data.current?.type === "Column";
 
-    // Im dropping a Task over a column
+    // dropping a Task over a column
     if (isActiveATask && isOverAColumn) {
       setTasks((tasks) => {
         const activeIndex = tasks.findIndex((t) => t.id === activeId);
@@ -326,7 +346,7 @@ function KanbanBoard() {
 
 function generateId() {
   /* Generate a random number between 0 and 10000 */
-  return Math.floor(Math.random() * 10001);
+  return Math.floor(Math.random() * 10001).toString();
 }
 
 export default KanbanBoard;
