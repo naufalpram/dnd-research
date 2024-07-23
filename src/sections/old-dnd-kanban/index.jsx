@@ -11,8 +11,7 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import TaskCard from "./components/TaskCard";
-import { RestrictToWindow } from "@dnd-kit/dom/modifiers";
-import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 const defaultCols = [
   {
